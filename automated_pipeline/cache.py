@@ -240,19 +240,38 @@ class MatrixCache:
         feature_config = {
             "matrix_cache_version": getattr(self.cfg, "MATRIX_CACHE_VERSION", 1),
             "min_age": self.cfg.MIN_AGE,
+            "use_edregtime_as_index_time": self.cfg.USE_EDREGTIME_AS_INDEX_TIME,
             "control_downsample_ratio": self.cfg.CONTROL_DOWNSAMPLE_RATIO,
             "use_natural_prevalence_holdout": self.cfg.USE_NATURAL_PREVALENCE_HOLDOUT,
+            "target_diagnosis_codes_by_version": self.cfg.TARGET_DIAGNOSIS_CODES_BY_VERSION,
             "use_clinically_similar_controls": self.cfg.USE_CLINICALLY_SIMILAR_CONTROLS,
             "clinically_similar_control_groups": self.cfg.CLINICALLY_SIMILAR_CONTROL_GROUPS,
-            "control_exclusion_diagnosis_prefixes": self.cfg.CONTROL_EXCLUSION_DIAGNOSIS_PREFIXES,
+            "control_exclusion_diagnosis_codes_by_version": self.cfg.CONTROL_EXCLUSION_DIAGNOSIS_CODES_BY_VERSION,
             "use_training_hard_controls": self.cfg.USE_TRAINING_HARD_CONTROLS,
             "hard_control_admission_types": self.cfg.HARD_CONTROL_ADMISSION_TYPES,
             "hard_control_admission_locations": self.cfg.HARD_CONTROL_ADMISSION_LOCATIONS,
             "test_size": self.cfg.TEST_SIZE,
             "random_state": self.cfg.RANDOM_STATE,
             "day_0_window_hours": self.cfg.DAY_0_WINDOW_HOURS,
+            "use_diagnosis_time_censoring": self.cfg.USE_DIAGNOSIS_TIME_CENSORING,
+            "diagnosis_time_source": self.cfg.DIAGNOSIS_TIME_SOURCE,
+            "diagnosis_time_require_result_section": self.cfg.DIAGNOSIS_TIME_REQUIRE_RESULT_SECTION,
+            "diagnosis_time_result_section_headers": self.cfg.DIAGNOSIS_TIME_RESULT_SECTION_HEADERS,
+            "diagnosis_time_require_diagnostic_exam": self.cfg.DIAGNOSIS_TIME_REQUIRE_DIAGNOSTIC_EXAM,
+            "diagnosis_time_exam_include_patterns": self.cfg.DIAGNOSIS_TIME_EXAM_INCLUDE_PATTERNS,
+            "diagnosis_time_exam_anatomy_patterns": self.cfg.DIAGNOSIS_TIME_EXAM_ANATOMY_PATTERNS,
+            "diagnosis_time_exam_exclude_patterns": self.cfg.DIAGNOSIS_TIME_EXAM_EXCLUDE_PATTERNS,
+            "diagnosis_time_text_patterns": self.cfg.DIAGNOSIS_TIME_TEXT_PATTERNS,
+            "diagnosis_time_negation_patterns": self.cfg.DIAGNOSIS_TIME_NEGATION_PATTERNS,
             "vitals_dict": self.cfg.VITALS_DICT,
             "labs_dict": self.cfg.LABS_DICT,
+            "use_ecg_features": self.cfg.USE_ECG_FEATURES,
+            "ecg_measurement_features": self.cfg.ECG_MEASUREMENT_FEATURES,
+            "ecg_derived_features": self.cfg.ECG_DERIVED_FEATURES,
+            "feature_aggregation_mode": getattr(self.cfg, "FEATURE_AGGREGATION_MODE", "full"),
+            "include_first_features": getattr(self.cfg, "INCLUDE_FIRST_FEATURES", True),
+            "use_medication_features": getattr(self.cfg, "USE_MEDICATION_FEATURES", False),
+            "medication_group_patterns": getattr(self.cfg, "MEDICATION_GROUP_PATTERNS", {}),
         }
         source_paths = {
             "patients": self.cfg.DATA_DIR / "hosp" / "patients.csv",
@@ -262,6 +281,13 @@ class MatrixCache:
             "chartevents": self.cfg.DATA_DIR / "icu" / "chartevents.csv",
             "labevents": self.cfg.DATA_DIR / "hosp" / "labevents.csv",
         }
+        if getattr(self.cfg, "USE_DIAGNOSIS_TIME_CENSORING", False):
+            source_paths["radiology_notes"] = self.cfg.RADIOLOGY_NOTES_PATH
+            source_paths["radiology_detail"] = self.cfg.RADIOLOGY_DETAIL_PATH
+        if getattr(self.cfg, "USE_ECG_FEATURES", False):
+            source_paths["ecg_measurements"] = self.cfg.ECG_MEASUREMENTS_PATH
+        if getattr(self.cfg, "USE_MEDICATION_FEATURES", False):
+            source_paths["prescriptions"] = self.cfg.PRESCRIPTIONS_PATH
         return {
             "feature_config": self._normalize(feature_config),
             "sources": {

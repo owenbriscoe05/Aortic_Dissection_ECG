@@ -1,3 +1,21 @@
+# Controlled clinical data and generated artifacts
 data/
+
+# Python/runtime noise
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Local long-running session state and logs
+.tmux/
+*.log
+
+# Pipeline temporary CSVs when commands are run from automated_pipeline/
+automated_pipeline/temp_*.csv
+automated_pipeline/*_cached.csv
+
+# Local environment files
+.env
+.venv/
+venv/

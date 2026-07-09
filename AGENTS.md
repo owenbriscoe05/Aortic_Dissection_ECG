@@ -2,9 +2,67 @@
 
 ## Project Purpose
 
-This project uses MIMIC-IV electronic health record data to develop standard EHR-based machine learning models for predicting aortic dissection, with current modeling focused on XGBoost and CatBoost. The active workflow is an automated pipeline in `automated_pipeline/` that is intended to make cohort, feature, preprocessing, and model decision changes easy to control through `config.py`, then rerun so accuracy and related performance changes can be compared.
+This project builds standard EHR-based machine learning models for predicting aortic dissection from MIMIC-IV data, currently centered on XGBoost. The active workflow lives in `automated_pipeline/` and is designed to make cohort, feature, preprocessing, feature-selection, and model settings controllable from `config.py` or sweep scripts.
 
-At this stage, pipeline runtime is a key constraint because each iteration parses large CSV files from the MIMIC-IV data. Changes should preserve the ability to iterate quickly on configuration decisions, and performance improvements that reduce repeated large-table parsing are especially relevant.
+Runtime matters. Prefer cached, chunked, and configuration-driven changes over ad hoc large-table reparsing.
+
+## Current Clinical Modeling Rules
+
+- Target labels and control exclusions must use exact aortic dissection ICD codes only: ICD-9 `441`, `441.00`, `441.01`, `441.03`; ICD-10 `I71.00`, `I71.01`, `I71.010`, `I71.012`, `I71.019`, `I71.03`. Normalize by removing decimals. Do not use broad `441` or `I71` prefix matching.
+- Controls are currently restricted to ICD-coded chest pain and back pain candidate admissions only. This is a temporary approximation until discharge-note LLM processing is available to identify the control presentation more accurately.
+- Index time is `edregtime` when present and not after `admittime`; otherwise use `admittime`. Preserve `index_time_source`.
+- Default feature window is 24 hours from index time. Diagnosis-time censoring is available but should only use real clinical timestamps such as radiology `charttime`, never fallback system/storage timestamps.
+- Keep row/column missingness thresholds clinically defensible. Avoid retaining fully empty rows or mostly empty columns unless explicitly justified.
+- Use XGBoost native categorical handling by default. One-hot encoding should be an explicit comparison choice.
+- Report average precision, PR-AUC, ROC-AUC, F1, threshold operating points, feature importance, and run metadata.
+- Protect `race` from automatic feature pruning unless the user explicitly revisits that decision.
+
+## Feature Engineering State
+
+- Current feature aggregation supports three modes via `FEATURE_AGGREGATION_MODE`:
+  - `full`: emits min/max/mean aggregates and first values where enabled.
+  - `median_only`: emits medians only; current expanded sweeps use no first features.
+  - `first_only`: emits only the first in-window value for each feature.
+- The active post-presentation direction is an ECG-complete lab/vitals/ECG first-value model: select the top 50 most prevalent numeric in-window labs across the full configured model cohort before train/test splitting, add vitals and ECG machine measurements, require at least one ECG machine-measurement row in the 24-hour feature window, and use first values only for all three feature families.
+- Each lab/vitals run must write a lab prevalence table with control-set and target-set prevalence for the selected labs.
+- Each model run should write an HTML presentation with relevant plots, including PR/ROC curves and SHAP beeswarm, threshold operating points, model metrics, feature summaries, run metadata, and cohort/feature caveats.
+- ECG machine measurements are part of the active default model and should use first-only aggregation. Derived ECG features include QT interval and Bazett QTc.
+- Medication features are experimental and grouped from `prescriptions.csv` by clinically relevant drug-name patterns. They should be evaluated as report-producing comparisons before any default adoption.
+- Additional lab panels are experimental in `run_expanded_feature_sweep.py`; do not treat them as default without reviewing model performance and leakage implications.
+
+## Feature Selection
+
+- Recursive feature elimination should choose features using the training validation split, not the holdout set.
+- Greedy backward ablation may accept a removal only when validation average precision improves or stays within the explicitly configured tolerance.
+- RFE should return the best validation-AP subset encountered along the tolerated-drop path, not merely the final subset before stopping.
+- Shadow-feature filtering is report-first: classify features as keep/tentative/reject, then review before permanent drops.
+
+## Active Sweep Scripts
+
+- `run_feature_sweep.py` runs aggregation-mode and RFE-tolerance sweeps across `full` and `median_only`.
+- `run_expanded_feature_sweep.py` waits for the first sweep if requested, then tests median-only expanded lab and medication variants.
+- `run_lab_vitals_first_model.py` is the current active model runner despite the historical filename. It builds a unique folder under `data/processed/model_reports/lab_vitals_ecg_first_runs/`, selects top-50 prevalent labs, reports target/control lab prevalence, trains the first-only labs/vitals/ECG model, and generates the associated HTML presentation.
+- `run_lab_vitals_first_model.py --require-core-vitals-complete` is an experimental sensitivity run, not the default; it keeps only rows with `heart_rate_first`, `resp_rate_first`, and either complete NIBP or complete ABP first values.
+- `run_lab_vitals_first_model.py --require-heart-rate-resp-complete` is a separate experimental sensitivity run for requiring only `heart_rate_first` and `resp_rate_first`; it can be combined with `--drop-features` to remove BP features from modeling.
+- `run_lab_vitals_first_catboost_model.py` runs the same ECG-complete first-only labs/vitals/ECG feature matrix with CatBoost, writing equivalent metrics, lab prevalence, PR/ROC plots, SHAP plots, and HTML presentation artifacts under `data/processed/model_reports/lab_vitals_ecg_first_catboost_runs/`.
+- Long sweeps may run in tmux. Check logs under `data/processed/model_reports/feature_sweeps/` or `data/processed/model_reports/expanded_feature_sweeps/`.
+
+## Archived Historical Run Handoff
+
+This handoff is stale as of 2026-07-08 and should not be treated as the current starting point. As of 2026-07-06, these long-running sweep sessions were expected:
+
+- `feature_sweep_20260706_171031`
+  - Script: `automated_pipeline/run_feature_sweep.py`
+  - Log: `data/processed/model_reports/feature_sweeps/20260706_171031/sweep.log`
+  - Summary: `data/processed/model_reports/feature_sweeps/20260706_171031/20260706_171031_sweep_summary.csv`
+  - Scope: `full` and `median_only` aggregation modes across RFE tolerances `0.005`, `0.01`, and `0.02`.
+- `expanded_feature_sweep_20260706_172057`
+  - Script: `automated_pipeline/run_expanded_feature_sweep.py`
+  - Log: `data/processed/model_reports/expanded_feature_sweeps/20260706_172057/expanded_sweep.log`
+  - Summary: `data/processed/model_reports/expanded_feature_sweeps/20260706_172057/20260706_172057_expanded_sweep_summary.csv`
+  - Scope: waits for the first sweep to finish, then runs median-only expanded lab and medication variants across the same RFE tolerances.
+
+To resume old sweeps after a disconnect, first run `tmux ls`, then inspect the logs and summary CSVs. When sweeps finish, compare ranked summary files by holdout average precision, PR-AUC, ROC-AUC, F1, and feature count. Do not promote expanded labs or medication features to defaults unless the user explicitly revisits that decision.
 
 ## Project Structure & Module Organization
 
@@ -22,10 +80,10 @@ No package metadata or Makefile is currently present. Run commands from `automat
 
 ```bash
 cd automated_pipeline
-python main.py
+python run_lab_vitals_first_model.py
 ```
 
-This builds temporary cohort/feature CSVs, preprocesses the matrix, and runs the model workflow. For notebook work, start Jupyter from the repository root:
+This builds temporary cohort/feature CSVs, preprocesses the matrix, runs the active model workflow, and writes reports plus HTML presentation artifacts under a unique folder in `data/processed/model_reports/lab_vitals_ecg_first_runs/`. For notebook work, start Jupyter from the repository root:
 
 ```bash
 jupyter lab notebooks

@@ -16,6 +16,7 @@ def main():
         temp_spine_path = builder.build_spine_and_demographics()
         temp_vitals_path = builder.add_vitals(temp_spine_path)
         temp_matrix_path = builder.add_labs(temp_vitals_path)
+        temp_matrix_path = builder.add_ecg_features(temp_matrix_path)
         matrix_cache.store_raw_matrix(temp_matrix_path)
 
     # Add raw feature builders before matrix_cache.store_raw_matrix and include
