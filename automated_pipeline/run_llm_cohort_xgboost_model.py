@@ -12,6 +12,9 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
+os.environ.setdefault("MPLCONFIGDIR", "/tmp/matplotlib")
+os.environ.setdefault("XDG_CACHE_HOME", "/tmp")
+
 from cache import EventCache
 from config import PipelineConfig
 from engine import ModelEngine
@@ -22,10 +25,12 @@ from run_lab_vitals_first_model import (
     format_metric,
     html_escape,
     image_data_uri,
+    load_lab_labels,
     plot_pr_curve,
     plot_roc_curve,
     plot_shap_all_features,
     plot_shap_beeswarm_all_features,
+    sanitize_feature_name,
     train_model_for_shap,
 )
 
@@ -43,7 +48,6 @@ DEMOGRAPHIC_FEATURES = [
     "race",
     "insurance",
     "marital_status",
-    "encounter_urgency",
 ]
 
 
@@ -263,22 +267,148 @@ def aggregate_first_events_by_row(event_chunks, spine, item_map):
     return wide
 
 
-def add_vitals(cfg, spine_path):
-    print("[2/4] Extracting Day-0 Vitals...")
+def select_top_labs_by_row(cfg, spine_path, top_n):
+    print(f"\n[2/4] Selecting top {top_n} most prevalent in-window numeric labs...")
+    spine = pd.read_csv(
+        spine_path,
+        usecols=[
+            "cohort_row_id",
+            "subject_id",
+            "index_time",
+            "feature_window_end",
+            "is_aortic_dissection",
+        ],
+    )
+    spine["index_time"] = pd.to_datetime(spine["index_time"], errors="coerce")
+    spine["feature_window_end"] = pd.to_datetime(spine["feature_window_end"], errors="coerce")
+    default_end = spine["index_time"] + pd.to_timedelta(cfg.DAY_0_WINDOW_HOURS, unit="h")
+    spine["feature_window_end"] = spine["feature_window_end"].fillna(default_end)
+    spine_times = spine_times_for_merge(spine)
+    labels = spine[["cohort_row_id", "is_aortic_dissection"]].copy()
+
+    observed_pairs = []
+    usecols = ["subject_id", "charttime", "itemid", "valuenum"]
+    chunksize = getattr(cfg, "EVENT_CACHE_CHUNKSIZE", 3_000_000)
+    subject_ids = set(spine["subject_id"])
+    for chunk_number, chunk in enumerate(
+        pd.read_csv(cfg.DATA_DIR / "hosp" / "labevents.csv", usecols=usecols, chunksize=chunksize),
+        start=1,
+    ):
+        chunk = chunk[chunk["subject_id"].isin(subject_ids)].copy()
+        if chunk.empty:
+            if chunk_number % 10 == 0:
+                print(f"      scanned {chunk_number:,} lab chunks; no cohort rows in latest chunk")
+            continue
+        chunk["charttime"] = pd.to_datetime(chunk["charttime"], errors="coerce")
+        chunk["valuenum"] = pd.to_numeric(chunk["valuenum"], errors="coerce")
+        chunk.dropna(subset=["subject_id", "charttime", "itemid", "valuenum"], inplace=True)
+        if chunk.empty:
+            continue
+        chunk = chunk.merge(spine_times, on="subject_id", how="inner")
+        chunk = chunk[
+            (chunk["charttime"] >= chunk["index_time"])
+            & (chunk["charttime"] <= chunk["feature_window_end"])
+        ].copy()
+        if not chunk.empty:
+            observed_pairs.append(chunk[["cohort_row_id", "itemid"]].drop_duplicates())
+        if chunk_number % 10 == 0:
+            observed_count = sum(len(pairs) for pairs in observed_pairs)
+            print(
+                f"      scanned {chunk_number:,} lab chunks; "
+                f"accumulated {observed_count:,} encounter-lab observations"
+            )
+        del chunk
+        gc.collect()
+
+    if not observed_pairs:
+        raise ValueError("No in-window numeric labs were found for the LLM cohort.")
+
+    observed = pd.concat(observed_pairs, ignore_index=True).drop_duplicates()
+    observed["itemid"] = pd.to_numeric(observed["itemid"], errors="coerce").astype("Int64")
+    observed.dropna(subset=["itemid"], inplace=True)
+    observed["itemid"] = observed["itemid"].astype("int64")
+    observed = observed.merge(labels, on="cohort_row_id", how="inner")
+
+    total_rows = int(spine["cohort_row_id"].nunique())
+    total_targets = int((spine["is_aortic_dissection"] == 1).sum())
+    total_controls = int((spine["is_aortic_dissection"] == 0).sum())
+    overall_counts = observed.groupby("itemid")["cohort_row_id"].nunique()
+    target_counts = (
+        observed[observed["is_aortic_dissection"] == 1]
+        .groupby("itemid")["cohort_row_id"]
+        .nunique()
+    )
+    control_counts = (
+        observed[observed["is_aortic_dissection"] == 0]
+        .groupby("itemid")["cohort_row_id"]
+        .nunique()
+    )
+    prevalence = (
+        pd.DataFrame({"observed_encounters": overall_counts})
+        .join(target_counts.rename("target_observed_encounters"), how="left")
+        .join(control_counts.rename("control_observed_encounters"), how="left")
+        .fillna(0)
+        .reset_index()
+    )
+    count_cols = [
+        "observed_encounters",
+        "target_observed_encounters",
+        "control_observed_encounters",
+    ]
+    prevalence[count_cols] = prevalence[count_cols].astype(int)
+    prevalence["overall_prevalence"] = prevalence["observed_encounters"] / total_rows
+    prevalence["target_prevalence"] = prevalence["target_observed_encounters"] / total_targets
+    prevalence["control_prevalence"] = prevalence["control_observed_encounters"] / total_controls
+    prevalence["total_encounters"] = total_rows
+    prevalence["total_targets"] = total_targets
+    prevalence["total_controls"] = total_controls
+
+    lab_labels = load_lab_labels(cfg)
+    prevalence = prevalence.merge(lab_labels, on="itemid", how="left")
+    prevalence["label"] = prevalence["label"].fillna(
+        prevalence["itemid"].map(lambda itemid: f"itemid_{itemid}")
+    )
+    prevalence["fluid"] = prevalence["fluid"].fillna("")
+    prevalence["category"] = prevalence["category"].fillna("")
+    prevalence.sort_values(
+        ["overall_prevalence", "observed_encounters", "itemid"],
+        ascending=[False, False, True],
+        inplace=True,
+    )
+    prevalence["prevalence_rank"] = range(1, len(prevalence) + 1)
+    selected = prevalence.head(top_n).copy()
+    used_names = set()
+    selected["feature_name"] = [
+        sanitize_feature_name(label, itemid, used_names)
+        for label, itemid in zip(selected["label"], selected["itemid"])
+    ]
+    selected["model_column"] = selected["feature_name"] + "_first"
+    lab_dict = dict(zip(selected["itemid"], selected["feature_name"]))
+    print(
+        f"    Selected {len(lab_dict):,} labs from {len(prevalence):,} observed numeric lab itemids."
+    )
+    print(
+        "    Most prevalent selected labs: "
+        + ", ".join(selected["feature_name"].tolist())
+    )
+    return lab_dict, selected
+
+
+def add_labs(cfg, spine_path):
+    print("[2.5/4] Extracting First In-Window Labs...")
     spine = pd.read_csv(spine_path)
     spine["index_time"] = pd.to_datetime(spine["index_time"], errors="coerce")
-    itemids = list(cfg.VITALS_DICT.keys())
     event_chunks = iter_event_chunks(
         cfg,
-        cfg.DATA_DIR / "icu" / "chartevents.csv",
-        "chartevents_vitals",
-        itemids,
+        cfg.DATA_DIR / "hosp" / "labevents.csv",
+        "labevents_labs",
+        cfg.LABS_DICT.keys(),
         spine["subject_id"],
-        use_cache=True,
+        use_cache=False,
     )
-    agg_v = aggregate_first_events_by_row(event_chunks, spine, cfg.VITALS_DICT)
-    spine = spine.merge(agg_v, on="cohort_row_id", how="left")
-    temp_path = "temp_llm_spine_vitals.csv"
+    agg_labs = aggregate_first_events_by_row(event_chunks, spine, cfg.LABS_DICT)
+    spine = spine.merge(agg_labs, on="cohort_row_id", how="left")
+    temp_path = "temp_llm_spine_labs.csv"
     spine.to_csv(temp_path, index=False)
     os.remove(spine_path)
     return temp_path
@@ -353,10 +483,19 @@ def add_ecg_features(cfg, matrix_path):
     return matrix_path
 
 
-def build_vitals_ecg_matrix(cfg, report_dir, run_id, targets_path, controls_path):
+def build_demographics_ecg_matrix(cfg, report_dir, run_id, targets_path, controls_path, top_labs=0):
     spine_path = build_llm_spine(cfg, targets_path, controls_path, report_dir, run_id)
-    matrix_path = add_vitals(cfg, spine_path)
-    matrix_path = add_ecg_features(cfg, matrix_path)
+    if top_labs:
+        lab_dict, lab_prevalence = select_top_labs_by_row(cfg, spine_path, top_labs)
+        cfg.LABS_DICT = lab_dict
+        prevalence_path = report_dir / f"{run_id}_top{top_labs}_lab_prevalence_by_label.csv"
+        lab_prevalence.to_csv(prevalence_path, index=False)
+        active_labs_path = report_dir / f"{run_id}_selected_lab_features.txt"
+        active_labs_path.write_text("\n".join(lab_prevalence["model_column"].tolist()) + "\n")
+        print(f"    Lab prevalence audit: {prevalence_path}")
+        print(f"    Selected lab feature list: {active_labs_path}")
+        spine_path = add_labs(cfg, spine_path)
+    matrix_path = add_ecg_features(cfg, spine_path)
     raw_matrix_audit = report_dir / f"{run_id}_raw_feature_matrix.csv"
     pd.read_csv(matrix_path).to_csv(raw_matrix_audit, index=False)
     print(f"    Raw feature matrix audit: {raw_matrix_audit}")
@@ -365,20 +504,22 @@ def build_vitals_ecg_matrix(cfg, report_dir, run_id, targets_path, controls_path
 
 def feature_family_counts(active_features):
     demographic = [feature for feature in active_features if feature in DEMOGRAPHIC_FEATURES]
-    vital = [
+    ecg = [feature for feature in active_features if feature.startswith("ecg_")]
+    lab = [
         feature
         for feature in active_features
-        if feature.endswith("_first") and not feature.startswith("ecg_") and feature not in demographic
+        if feature.endswith("_first")
+        and not feature.startswith("ecg_")
+        and feature not in demographic
     ]
-    ecg = [feature for feature in active_features if feature.startswith("ecg_")]
     other = [
         feature
         for feature in active_features
-        if feature not in demographic and feature not in vital and feature not in ecg
+        if feature not in demographic and feature not in ecg and feature not in lab
     ]
     return {
         "demographic_features": demographic,
-        "vital_features": vital,
+        "lab_features": lab,
         "ecg_features": ecg,
         "other_features": other,
     }
@@ -421,7 +562,7 @@ def threshold_rows_html(thresholds):
     return f"<thead><tr>{header}</tr></thead><tbody>{''.join(rows)}</tbody>"
 
 
-def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_test, active_features):
+def create_demographics_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_test, active_features):
     summary = pd.read_csv(first_match(report_dir, "_main_summary_metrics.csv")).iloc[0]
     cv = pd.read_csv(first_match(report_dir, "_main_cv_metrics.csv"))
     thresholds = pd.read_csv(first_match(report_dir, "_main_threshold_metrics.csv"))
@@ -429,23 +570,41 @@ def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_tes
     roc_path = first_match(report_dir, "_main_roc_curve.csv")
     importance = pd.read_csv(first_match(report_dir, "_main_feature_importance.csv"))
 
-    pr_png = report_dir / "vitals_ecg_first_pr_curve.png"
-    roc_png = report_dir / "vitals_ecg_first_roc_curve.png"
+    families = feature_family_counts(active_features)
+    includes_labs = bool(families["lab_features"])
+    report_slug = "demographics_labs_ecg_first" if includes_labs else "demographics_ecg_first"
+    report_title = (
+        "Aortic Dissection Demographics/Labs/ECG Model"
+        if includes_labs
+        else "Aortic Dissection Demographics/ECG Model"
+    )
+    subtitle = (
+        "Demographics, top prevalent first in-window labs, and first in-window ECG machine-measurement values on LLM-derived target/control admissions."
+        if includes_labs
+        else "Demographics and first in-window ECG machine-measurement values on LLM-derived target/control admissions."
+    )
+    feature_bullet = (
+        "The lab predictors are the top prevalent in-window numeric labs, aggregated as first values only; vitals, medication features, encounter urgency, and ECG count are not model predictors."
+        if includes_labs
+        else "Labs, vitals, medication features, encounter urgency, and ECG count are not model predictors in this run."
+    )
+
+    pr_png = report_dir / f"{report_slug}_pr_curve.png"
+    roc_png = report_dir / f"{report_slug}_roc_curve.png"
     plot_pr_curve(pr_path, summary, pr_png)
     plot_roc_curve(roc_path, summary, roc_png)
 
     shap_model = train_model_for_shap(cfg, X_train, y_train, summary)
-    shap_png = report_dir / "vitals_ecg_first_shap_all_features.png"
-    shap_csv = report_dir / "vitals_ecg_first_shap_all_features.csv"
+    shap_png = report_dir / f"{report_slug}_shap_all_features.png"
+    shap_csv = report_dir / f"{report_slug}_shap_all_features.csv"
     shap_df, shap_values = plot_shap_all_features(shap_model, X_test, shap_png, shap_csv)
-    shap_beeswarm_png = report_dir / "vitals_ecg_first_shap_beeswarm_all_features.png"
+    shap_beeswarm_png = report_dir / f"{report_slug}_shap_beeswarm_all_features.png"
     plot_shap_beeswarm_all_features(shap_df, shap_values, X_test, shap_beeswarm_png)
 
     validation_row = thresholds[thresholds["rule"].eq("validation_f1")].iloc[0]
     default_row = thresholds[thresholds["rule"].eq("default_0.5")].iloc[0]
     top_features = importance.head(12)["Feature"].tolist()
     top_shap_features = shap_df.head(12)["feature"].tolist()
-    families = feature_family_counts(active_features)
     fold_rows = "\n".join(
         "<tr>"
         f"<td>{int(row.fold)}</td>"
@@ -468,7 +627,7 @@ def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_tes
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aortic Dissection Vitals/ECG Model</title>
+  <title>{report_title}</title>
   <style>
     :root {{ color-scheme: light; --ink: #17202a; --muted: #5d6875; --line: #d9dee7; --blue: #264f78; --panel: #f7f9fc; }}
     body {{ margin: 0; font-family: Arial, Helvetica, sans-serif; color: var(--ink); background: #ffffff; line-height: 1.45; }}
@@ -496,12 +655,12 @@ def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_tes
 <body>
 <main>
   <section>
-    <h1>Aortic Dissection Vitals/ECG Model</h1>
-    <p class="subtitle">First in-window vital signs and ECG machine-measurement values on LLM-derived target/control admissions.</p>
+    <h1>{report_title}</h1>
+    <p class="subtitle">{subtitle}</p>
     <ul>
       <li>Targets and controls are read from the derived discharge-note LLM cohort CSVs.</li>
       <li>The cohort unit is hospital admission / hadm_id, with encounter-keyed feature aggregation to avoid mixing multiple admissions for the same subject.</li>
-      <li>Labs and medication features are not model predictors in this run.</li>
+      <li>{feature_bullet}</li>
       <li>The cohort is restricted to admissions with at least one ECG machine-measurement row in the 24-hour feature window.</li>
     </ul>
   </section>
@@ -514,7 +673,7 @@ def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_tes
       <div class="metric"><span class="label">Holdout rows</span><span class="value">{int(summary['holdout_rows']):,}</span></div>
       <div class="metric"><span class="label">Holdout positives</span><span class="value">{int(summary['holdout_positive']):,}</span></div>
     </div>
-    <p>Feature count after preprocessing: <strong>{int(summary['feature_count'])}</strong>. Demographic/categorical features: <strong>{len(families['demographic_features'])}</strong>; vital features: <strong>{len(families['vital_features'])}</strong>; ECG features: <strong>{len(families['ecg_features'])}</strong>.</p>
+    <p>Feature count after preprocessing: <strong>{int(summary['feature_count'])}</strong>. Demographic/categorical features: <strong>{len(families['demographic_features'])}</strong>; lab features: <strong>{len(families['lab_features'])}</strong>; ECG features: <strong>{len(families['ecg_features'])}</strong>; other features: <strong>{len(families['other_features'])}</strong>.</p>
     <p>Top model-importance features: {", ".join(f"<strong>{html_escape(feature)}</strong>" for feature in top_features)}.</p>
   </section>
 
@@ -583,7 +742,7 @@ def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_tes
 </body>
 </html>
 """
-    html_path = report_dir / "vitals_ecg_first_model_update.html"
+    html_path = report_dir / f"{report_slug}_model_update.html"
     html_path.write_text(html)
     print(f"HTML presentation: {html_path}")
     print(f"PR curve: {pr_png}")
@@ -593,10 +752,15 @@ def create_vitals_ecg_html_presentation(report_dir, cfg, X_train, y_train, X_tes
     print(f"SHAP values: {shap_csv}")
 
 
-def write_vitals_ecg_manifest(report_dir, run_id, cfg, targets_path, controls_path, active_features=None):
+def write_demographics_ecg_manifest(report_dir, run_id, cfg, targets_path, controls_path, active_features=None):
+    method = (
+        "llm_targets_controls_demographics_top_labs_plus_ecg_first_only"
+        if getattr(cfg, "LABS_DICT", {})
+        else "llm_targets_controls_demographics_plus_ecg_first_only"
+    )
     manifest = {
         "run_id": run_id,
-        "method": "llm_targets_controls_vitals_plus_ecg_first_only",
+        "method": method,
         "cohort_source": "discharge-note LLM parsed phenotype cohorts",
         "llm_targets_path": str(targets_path),
         "llm_controls_path": str(controls_path),
@@ -614,6 +778,8 @@ def write_vitals_ecg_manifest(report_dir, run_id, cfg, targets_path, controls_pa
         "ecg_required_count_col": cfg.ECG_REQUIRED_COUNT_COL,
         "use_medication_features": bool(cfg.USE_MEDICATION_FEATURES),
         "features_to_drop": list(getattr(cfg, "FEATURES_TO_DROP", [])),
+        "selected_lab_itemids": [int(itemid) for itemid in getattr(cfg, "LABS_DICT", {}).keys()],
+        "selected_lab_features": list(getattr(cfg, "LABS_DICT", {}).values()),
         "col_missingness_threshold": float(cfg.COL_MISSINGNESS_THRESHOLD),
         "row_missingness_threshold": float(cfg.ROW_MISSINGNESS_THRESHOLD),
         "cv_folds": int(cfg.CV_FOLDS),
@@ -632,29 +798,34 @@ def run(args, report_dir):
     cfg = configure(report_dir, drop_features=args.drop_features)
     cfg.USE_CLINICALLY_SIMILAR_CONTROLS = False
     cfg.CLINICALLY_SIMILAR_CONTROL_GROUPS = {}
+    cfg.VITALS_DICT = {}
     cfg.LABS_DICT = {}
     cfg.LEAKAGE_LABS_TO_DROP = []
     cfg.USE_MATRIX_CACHE = False
+    cfg.USE_MEDICATION_FEATURES = False
+    cfg.FEATURES_TO_DROP = list(
+        dict.fromkeys(list(args.drop_features or []) + ["ecg_count", "encounter_urgency"])
+    )
     cfg.REQUIRE_ECG_MEASUREMENTS = True
-    cfg.REQUIRE_CORE_VITALS_COMPLETE = args.require_core_vitals_complete
-    cfg.REQUIRE_HEART_RATE_RESP_COMPLETE = args.require_heart_rate_resp_complete
     targets_path = Path(args.targets_path)
     controls_path = Path(args.controls_path)
-    matrix_path = build_vitals_ecg_matrix(
+    matrix_path = build_demographics_ecg_matrix(
         cfg,
         report_dir,
         args.run_id,
         targets_path,
         controls_path,
+        top_labs=args.top_labs,
     )
-    write_vitals_ecg_manifest(report_dir, args.run_id, cfg, targets_path, controls_path)
+    write_demographics_ecg_manifest(report_dir, args.run_id, cfg, targets_path, controls_path)
 
     engine = ModelEngine(cfg)
-    engine.run_id = f"{args.run_id}_vitals_ecg_first"
+    run_slug = "demographics_labs_ecg_first" if args.top_labs else "demographics_ecg_first"
+    engine.run_id = f"{args.run_id}_{run_slug}"
     X_train, y_train, X_test, y_test = engine.preprocess(matrix_path)
     active_features = list(X_train.columns)
     (report_dir / f"{args.run_id}_active_features.txt").write_text("\n".join(active_features) + "\n")
-    write_vitals_ecg_manifest(
+    write_demographics_ecg_manifest(
         report_dir,
         args.run_id,
         cfg,
@@ -663,7 +834,7 @@ def run(args, report_dir):
         active_features=active_features,
     )
     engine.train_and_eval(X_train, y_train, X_test, y_test)
-    create_vitals_ecg_html_presentation(
+    create_demographics_ecg_html_presentation(
         report_dir,
         cfg,
         X_train,
@@ -675,17 +846,30 @@ def run(args, report_dir):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Run the first-value vitals/ECG XGBoost model on LLM-derived target/control cohorts."
+        description="Run the demographics/ECG XGBoost model on LLM-derived target/control cohorts."
     )
-    parser.add_argument("--run-id", default=f"llm_cohort_vitals_ecg_xgb_{datetime.now().strftime('%Y%m%d_%H%M%S')}")
+    parser.add_argument("--run-id", default=None)
     parser.add_argument("--targets-path", default=str(DEFAULT_TARGETS_PATH))
     parser.add_argument("--controls-path", default=str(DEFAULT_CONTROLS_PATH))
     parser.add_argument("--drop-features", nargs="*", default=[])
-    parser.add_argument("--require-core-vitals-complete", action="store_true")
-    parser.add_argument("--require-heart-rate-resp-complete", action="store_true")
+    parser.add_argument("--top-labs", type=int, default=0)
     args = parser.parse_args()
+    if args.top_labs < 0:
+        parser.error("--top-labs must be non-negative")
+    if args.run_id is None:
+        prefix = (
+            "llm_cohort_demographics_labs_ecg_xgb"
+            if args.top_labs
+            else "llm_cohort_demographics_ecg_xgb"
+        )
+        args.run_id = f"{prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
-    report_dir = Path("../data/processed/model_reports/vitals_ecg_first_runs") / args.run_id
+    report_root = (
+        Path("../data/processed/model_reports/llm_demographics_labs_ecg_runs")
+        if args.top_labs
+        else Path("../data/processed/model_reports/llm_demographics_ecg_runs")
+    )
+    report_dir = report_root / args.run_id
     report_dir.mkdir(parents=True, exist_ok=False)
     log_path = report_dir / "run_console.log"
     with log_path.open("w") as log_file:

@@ -1,0 +1,13 @@
+exact_icd_target,llm_label,count
+Exact ICD target,Aneurysm only,15
+Exact ICD target,New dissection,268
+Exact ICD target,Other aortic syndrome,34
+Exact ICD target,Ruled out,1
+Exact ICD target,prior or chronic dissection only,151
+No exact ICD target,Aneurysm only,13264
+No exact ICD target,New dissection,83
+No exact ICD target,No aortic evidence,133810
+No exact ICD target,Other aortic syndrome,2785
+No exact ICD target,Ruled out,8928
+No exact ICD target,Unclear,10
+No exact ICD target,prior or chronic dissection only,744

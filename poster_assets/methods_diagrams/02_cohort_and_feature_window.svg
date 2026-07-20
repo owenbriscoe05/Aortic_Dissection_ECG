@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#596B7A"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        dominant-baseline: alphabetic;
+      }
+    </style>
+  </defs>
+
+<text x="70.0" y="70.0" font-size="36" font-weight="800" fill="#1F2933" text-anchor="start">Cohort Definition and Early Feature Window</text>
+<text x="70.0" y="107.0" font-size="18" fill="#596B7A" text-anchor="start">The active model uses a clinically anchored index time and an ECG-complete 24-hour measurement window.</text>
+<rect x="70.0" y="180.0" width="330.0" height="150.0" rx="8" ry="8" fill="#FCEEEE" stroke="#A43E3E" stroke-width="2"/>
+<text x="92.0" y="216.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Target admissions</text>
+<text x="92.0" y="248.0" font-size="18" fill="#596B7A" text-anchor="start">Exact ICD-9/ICD-10 aortic</text>
+<text x="92.0" y="270.0" font-size="18" fill="#596B7A" text-anchor="start">dissection codes after decimal</text>
+<text x="92.0" y="292.0" font-size="18" fill="#596B7A" text-anchor="start">normalization. No broad prefix</text>
+<text x="92.0" y="314.0" font-size="18" fill="#596B7A" text-anchor="start">matching.</text>
+<rect x="70.0" y="390.0" width="330.0" height="150.0" rx="8" ry="8" fill="#EEF6F5" stroke="#2C7A7B" stroke-width="2"/>
+<text x="92.0" y="426.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Control admissions</text>
+<text x="92.0" y="458.0" font-size="18" fill="#596B7A" text-anchor="start">Exclude exact dissection codes.</text>
+<text x="92.0" y="480.0" font-size="18" fill="#596B7A" text-anchor="start">Standard run can restrict</text>
+<text x="92.0" y="502.0" font-size="18" fill="#596B7A" text-anchor="start">controls to clinically similar</text>
+<text x="92.0" y="524.0" font-size="18" fill="#596B7A" text-anchor="start">chest-pain diagnoses.</text>
+<rect x="70.0" y="600.0" width="330.0" height="145.0" rx="8" ry="8" fill="#F3F6FA" stroke="#3D5A80" stroke-width="2"/>
+<text x="92.0" y="636.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Eligibility filters</text>
+<text x="92.0" y="668.0" font-size="18" fill="#596B7A" text-anchor="start">Age at least 18 years. Require at</text>
+<text x="92.0" y="690.0" font-size="18" fill="#596B7A" text-anchor="start">least one in-window ECG row for</text>
+<text x="92.0" y="712.0" font-size="18" fill="#596B7A" text-anchor="start">the active default model.</text>
+<rect x="505.0" y="235.0" width="340.0" height="155.0" rx="8" ry="8" fill="#F3F6FA" stroke="#3D5A80" stroke-width="2"/>
+<text x="527.0" y="271.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Index time rule</text>
+<text x="527.0" y="303.0" font-size="18" fill="#596B7A" text-anchor="start">edregtime if present and not after</text>
+<text x="527.0" y="325.0" font-size="18" fill="#596B7A" text-anchor="start">admittime; otherwise admittime.</text>
+<text x="527.0" y="347.0" font-size="18" fill="#596B7A" text-anchor="start">Store index_time_source.</text>
+<rect x="505.0" y="500.0" width="340.0" height="145.0" rx="8" ry="8" fill="#F8F4FF" stroke="#6B4E9B" stroke-width="2"/>
+<text x="527.0" y="536.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Admission-level unit</text>
+<text x="527.0" y="568.0" font-size="18" fill="#596B7A" text-anchor="start">LLM-derived cohorts preserve</text>
+<text x="527.0" y="590.0" font-size="18" fill="#596B7A" text-anchor="start">hadm_id; one admission remains one</text>
+<text x="527.0" y="612.0" font-size="18" fill="#596B7A" text-anchor="start">model row.</text>
+<text x="1000.0" y="225.0" font-size="30" font-weight="800" fill="#1F2933" text-anchor="start">Feature timeline</text>
+<line x1="970.0" y1="430.0" x2="1450.0" y2="430.0" stroke="#1F2933" stroke-width="3" stroke-linecap="round"/>
+<circle cx="1010.0" cy="430.0" r="12.0" fill="#F3F6FA" stroke="#3D5A80" stroke-width="2"/>
+<circle cx="1405.0" cy="430.0" r="12.0" fill="#EEF8EE" stroke="#3A7D44" stroke-width="2"/>
+<text x="1010.0" y="390.0" font-size="22" font-weight="700" fill="#1F2933" text-anchor="middle">Index time</text>
+<text x="1405.0" y="390.0" font-size="22" font-weight="700" fill="#1F2933" text-anchor="middle">+24 hours</text>
+<text x="1210.0" y="470.0" font-size="22" font-weight="700" fill="#1F2933" text-anchor="middle">Default feature window</text>
+<path d="M1010,500 C1120,570 1290,570 1405,500" fill="none" stroke="#3D5A80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="1210.0" y="605.0" font-size="20" font-weight="400" fill="#1F2933" text-anchor="middle">First in-window ECG machine measurements</text>
+<text x="1210.0" y="635.0" font-size="18" font-weight="400" fill="#596B7A" text-anchor="middle">Demographics measured from admission/patient tables</text>
+<line x1="1265.0" y1="430.0" x2="1265.0" y2="350.0" stroke="#A43E3E" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="7 7"/>
+<text x="1265.0" y="330.0" font-size="18" font-weight="400" fill="#A43E3E" text-anchor="middle">Optional diagnosis-time censoring</text>
+<text x="1265.0" y="355.0" font-size="16" font-weight="400" fill="#A43E3E" text-anchor="middle">radiology charttime only</text>
+<line x1="400.0" y1="255.0" x2="505.0" y2="303.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="400.0" y1="465.0" x2="505.0" y2="303.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="400.0" y1="660.0" x2="505.0" y2="570.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="845.0" y1="303.0" x2="970.0" y2="430.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="845.0" y1="570.0" x2="970.0" y2="500.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+</svg>

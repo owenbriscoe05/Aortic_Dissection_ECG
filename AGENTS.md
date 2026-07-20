@@ -47,7 +47,7 @@ Example bounded test, only after the user explicitly asks for paid calls:
 python automated_pipeline/parse_discharge.py --run --max-visits 10 --parallel-workers 2 --max-in-flight 4
 ```
 
-For a future full run, confirm the exact model, visit scope, worker count, Azure limits, expected cost posture, output path, and guardrails with the user before running anything.
+Before any additional full parser run, confirm the exact model, visit scope, worker count, Azure limits, expected cost posture, output path, and guardrails with the user before running anything.
 
 Do not run paid LLM parsing unless the user explicitly asks in the current exchange.
 
@@ -57,15 +57,14 @@ Do not run paid LLM parsing unless the user explicitly asks in the current excha
   - `full`: emits min/max/mean aggregates and first values where enabled.
   - `median_only`: emits medians only.
   - `first_only`: emits only the first in-window value for each feature.
-- The active post-presentation tabular model direction is ECG-complete first-value labs/vitals/ECG:
-  - Select the top 50 most prevalent numeric in-window labs across the configured model cohort before train/test splitting.
-  - Add vitals and ECG machine measurements.
+- The active tabular model direction is ECG-complete demographics + ECG:
+  - Use demographic/categorical predictors plus first in-window ECG machine measurements.
   - Require at least one ECG machine-measurement row in the 24-hour feature window.
-  - Use first values for labs, vitals, and ECG features.
-- Each lab/vitals/ECG run should write a lab prevalence table with control-set and target-set prevalence for selected labs.
+  - Exclude labs, vitals, medication features, encounter urgency, and ECG count from the default predictor set unless the user explicitly asks for a comparison.
+  - For LLM-derived target/control cohorts, preserve the hospital-admission / `hadm_id` cohort unit and avoid mixing multiple admissions from the same subject when aggregating features.
 - Each model run should write an HTML presentation with PR/ROC curves, SHAP beeswarm, threshold operating points, model metrics, feature summaries, run metadata, and cohort/feature caveats.
 - ECG machine measurements are part of the active default model and should use first-only aggregation. Derived ECG features include QT interval and Bazett QTc.
-- Medication features are experimental and should be evaluated as report-producing comparisons before any default adoption.
+- Labs, vitals, and medication features are comparison-only unless the user explicitly requests them.
 
 ## Feature Selection
 
@@ -76,8 +75,10 @@ Do not run paid LLM parsing unless the user explicitly asks in the current excha
 
 ## Key Scripts
 
-- `run_lab_vitals_first_model.py`: active XGBoost ECG-complete first-only labs/vitals/ECG runner. Writes reports under `data/processed/model_reports/lab_vitals_ecg_first_runs/`.
-- `run_lab_vitals_first_catboost_model.py`: CatBoost comparison for the same ECG-complete first-only feature matrix.
+- `run_demographics_ecg_model.py`: active XGBoost ECG-complete demographics + ECG runner for the standard configured cohort. Writes reports under `data/processed/model_reports/demographics_ecg_runs/`.
+- `run_llm_cohort_xgboost_model.py`: LLM-derived cohort runner; verify/update its feature set before running because it has been used for cohort-specific variants. Current default expectation is demographics + ECG, not vitals+ECG or labs/vitals/ECG.
+- `run_lab_vitals_first_model.py`: comparison XGBoost ECG-complete first-only labs/vitals/ECG runner. Do not treat it as the active default unless the user explicitly asks for labs/vitals.
+- `run_lab_vitals_first_catboost_model.py`: CatBoost comparison for the ECG-complete first-only labs/vitals/ECG feature matrix.
 - `parse_discharge.py`: OpenAI-on-Azure structured discharge-note parser for phenotype labels.
 - `run_feature_sweep.py` and `run_expanded_feature_sweep.py`: historical/experimental sweep scripts. Do not treat old sweep outputs as the current starting point without checking freshness and user intent.
 
@@ -104,7 +105,7 @@ Run tabular pipeline commands from `automated_pipeline/` when they rely on local
 
 ```bash
 cd automated_pipeline
-python run_lab_vitals_first_model.py
+python run_demographics_ecg_model.py
 ```
 
 For the discharge parser, commands are normally run from the repository root:

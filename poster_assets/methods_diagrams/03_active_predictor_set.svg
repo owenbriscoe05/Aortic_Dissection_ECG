@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#596B7A"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        dominant-baseline: alphabetic;
+      }
+    </style>
+  </defs>
+
+<text x="70.0" y="70.0" font-size="36" font-weight="800" fill="#1F2933" text-anchor="start">Active Predictor Set</text>
+<text x="70.0" y="107.0" font-size="18" fill="#596B7A" text-anchor="start">Default ECG-complete tabular modeling uses demographics plus the first ECG machine-measurement values</text>
+<text x="70.0" y="129.0" font-size="18" fill="#596B7A" text-anchor="start">from the early window.</text>
+<rect x="90.0" y="190.0" width="390.0" height="250.0" rx="8" ry="8" fill="#EEF6F5" stroke="#2C7A7B" stroke-width="2"/>
+<text x="112.0" y="226.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Included demographics</text>
+<text x="112.0" y="258.0" font-size="20" fill="#596B7A" text-anchor="start">index_age</text>
+<text x="112.0" y="283.0" font-size="20" fill="#596B7A" text-anchor="start">gender</text>
+<text x="112.0" y="308.0" font-size="20" fill="#596B7A" text-anchor="start">race</text>
+<text x="112.0" y="333.0" font-size="20" fill="#596B7A" text-anchor="start">insurance</text>
+<text x="112.0" y="358.0" font-size="20" fill="#596B7A" text-anchor="start">marital_status</text>
+<rect x="600.0" y="190.0" width="420.0" height="250.0" rx="8" ry="8" fill="#F3F6FA" stroke="#3D5A80" stroke-width="2"/>
+<text x="622.0" y="226.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Included ECG features</text>
+<text x="622.0" y="258.0" font-size="18" fill="#596B7A" text-anchor="start">First in-window machine measurements:</text>
+<text x="622.0" y="280.0" font-size="18" fill="#596B7A" text-anchor="start">RR interval, wave onsets/ends, axes.</text>
+<text x="622.0" y="302.0" font-size="18" fill="#596B7A" text-anchor="start">Derived: QT interval and Bazett QTc.</text>
+<rect x="1135.0" y="190.0" width="360.0" height="250.0" rx="8" ry="8" fill="#FCEEEE" stroke="#A43E3E" stroke-width="2"/>
+<text x="1157.0" y="226.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Default exclusions</text>
+<text x="1157.0" y="258.0" font-size="18" fill="#596B7A" text-anchor="start">Labs, vitals, medications,</text>
+<text x="1157.0" y="280.0" font-size="18" fill="#596B7A" text-anchor="start">encounter urgency, and ECG count</text>
+<text x="1157.0" y="302.0" font-size="18" fill="#596B7A" text-anchor="start">are comparison-only unless</text>
+<text x="1157.0" y="324.0" font-size="18" fill="#596B7A" text-anchor="start">explicitly requested.</text>
+<rect x="365.0" y="565.0" width="450.0" height="145.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="387.0" y="601.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Feature matrix</text>
+<text x="387.0" y="633.0" font-size="18" fill="#596B7A" text-anchor="start">ECG-complete admission rows with categorical</text>
+<text x="387.0" y="655.0" font-size="18" fill="#596B7A" text-anchor="start">predictors kept as native categorical</text>
+<text x="387.0" y="677.0" font-size="18" fill="#596B7A" text-anchor="start">variables for XGBoost.</text>
+<rect x="970.0" y="565.0" width="360.0" height="145.0" rx="8" ry="8" fill="#EEF8EE" stroke="#3A7D44" stroke-width="2"/>
+<text x="992.0" y="601.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Reporting discipline</text>
+<text x="992.0" y="633.0" font-size="18" fill="#596B7A" text-anchor="start">Missingness thresholds and</text>
+<text x="992.0" y="655.0" font-size="18" fill="#596B7A" text-anchor="start">protected race feature are</text>
+<text x="992.0" y="677.0" font-size="18" fill="#596B7A" text-anchor="start">documented in run metadata and</text>
+<text x="992.0" y="699.0" font-size="18" fill="#596B7A" text-anchor="start">caveats.</text>
+<line x1="480.0" y1="315.0" x2="600.0" y2="315.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M285,440 C285,525 450,530 505,565" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M810,440 C810,520 675,520 635,565" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1315,440 C1315,520 1240,520 1175,565" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 8" marker-end="url(#arrow)"/>
+<line x1="815.0" y1="638.0" x2="970.0" y2="638.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+</svg>

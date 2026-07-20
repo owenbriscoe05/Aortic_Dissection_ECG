@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#596B7A"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        dominant-baseline: alphabetic;
+      }
+    </style>
+  </defs>
+
+<text x="70.0" y="70.0" font-size="36" font-weight="800" fill="#1F2933" text-anchor="start">Discharge-Note Phenotyping Parser</text>
+<text x="70.0" y="107.0" font-size="18" fill="#596B7A" text-anchor="start">The parser converts visit-level discharge notes into auditable phenotype labels without sending visit</text>
+<text x="70.0" y="129.0" font-size="18" fill="#596B7A" text-anchor="start">metadata to the model input.</text>
+<rect x="70.0" y="180.0" width="340.0" height="145.0" rx="8" ry="8" fill="#EEF6F5" stroke="#2C7A7B" stroke-width="2"/>
+<text x="92.0" y="216.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Qualifying admissions</text>
+<text x="92.0" y="248.0" font-size="18" fill="#596B7A" text-anchor="start">At least one ECG machine-</text>
+<text x="92.0" y="270.0" font-size="18" fill="#596B7A" text-anchor="start">measurement row in first 24 hours</text>
+<text x="92.0" y="292.0" font-size="18" fill="#596B7A" text-anchor="start">and at least one attached non-</text>
+<text x="92.0" y="314.0" font-size="18" fill="#596B7A" text-anchor="start">empty discharge note.</text>
+<rect x="70.0" y="420.0" width="340.0" height="145.0" rx="8" ry="8" fill="#F8F4FF" stroke="#6B4E9B" stroke-width="2"/>
+<text x="92.0" y="456.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Visit-level note text</text>
+<text x="92.0" y="488.0" font-size="18" fill="#596B7A" text-anchor="start">All discharge-note rows for a</text>
+<text x="92.0" y="510.0" font-size="18" fill="#596B7A" text-anchor="start">qualifying admission are combined.</text>
+<text x="92.0" y="532.0" font-size="18" fill="#596B7A" text-anchor="start">Model input contains discharge-</text>
+<text x="92.0" y="554.0" font-size="18" fill="#596B7A" text-anchor="start">note text only.</text>
+<rect x="525.0" y="300.0" width="360.0" height="160.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="547.0" y="336.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Azure OpenAI Responses API</text>
+<text x="547.0" y="368.0" font-size="18" fill="#596B7A" text-anchor="start">OpenAI Python SDK against Azure-</text>
+<text x="547.0" y="390.0" font-size="18" fill="#596B7A" text-anchor="start">compatible endpoint; model default</text>
+<text x="547.0" y="412.0" font-size="18" fill="#596B7A" text-anchor="start">gpt-5.6-luna; store=False.</text>
+<rect x="1000.0" y="170.0" width="360.0" height="150.0" rx="8" ry="8" fill="#F3F6FA" stroke="#3D5A80" stroke-width="2"/>
+<text x="1022.0" y="206.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Strict JSON Schema</text>
+<text x="1022.0" y="238.0" font-size="18" fill="#596B7A" text-anchor="start">Presenting symptoms, aortic syndrome</text>
+<text x="1022.0" y="260.0" font-size="18" fill="#596B7A" text-anchor="start">status, diagnosis context, anatomy,</text>
+<text x="1022.0" y="282.0" font-size="18" fill="#596B7A" text-anchor="start">treatment, control usefulness,</text>
+<text x="1022.0" y="304.0" font-size="18" fill="#596B7A" text-anchor="start">overall label.</text>
+<rect x="1000.0" y="415.0" width="360.0" height="150.0" rx="8" ry="8" fill="#FCEEEE" stroke="#A43E3E" stroke-width="2"/>
+<text x="1022.0" y="451.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Local validation</text>
+<text x="1022.0" y="483.0" font-size="18" fill="#596B7A" text-anchor="start">Parse JSON, validate against schema,</text>
+<text x="1022.0" y="505.0" font-size="18" fill="#596B7A" text-anchor="start">stream successful records and errors</text>
+<text x="1022.0" y="527.0" font-size="18" fill="#596B7A" text-anchor="start">incrementally.</text>
+<rect x="525.0" y="610.0" width="360.0" height="145.0" rx="8" ry="8" fill="#EEF8EE" stroke="#3A7D44" stroke-width="2"/>
+<text x="547.0" y="646.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Audit outputs</text>
+<text x="547.0" y="678.0" font-size="18" fill="#596B7A" text-anchor="start">JSONL and CSV results, JSONL and CSV</text>
+<text x="547.0" y="700.0" font-size="18" fill="#596B7A" text-anchor="start">errors, manifest, qualifying-visit</text>
+<text x="547.0" y="722.0" font-size="18" fill="#596B7A" text-anchor="start">file, and summary.</text>
+<line x1="240.0" y1="325.0" x2="240.0" y2="420.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="410.0" y1="492.0" x2="525.0" y2="380.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="885.0" y1="380.0" x2="1000.0" y2="245.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="1180.0" y1="320.0" x2="1180.0" y2="415.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M1000,490 C930,560 870,600 780,610" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M525,665 C425,665 365,570 310,565" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 8"/>
+<text x="300.0" y="618.0" font-size="18" font-weight="400" fill="#596B7A" text-anchor="middle">Metadata retained only in output records</text>
+</svg>

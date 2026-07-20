@@ -1,0 +1,9 @@
+step,count,workflow
+Adult ICD model spine,223452,standard model
+ECG-complete ICD model,70094,standard model
+ECG-qualified visits,194917,LLM parser
+With discharge notes,160095,LLM parser
+Successful parses,160093,LLM parser
+Base LLM targets,351,LLM target cleanup
+Final LLM targets,187,LLM target cleanup
+Final LLM controls,7643,LLM control selection

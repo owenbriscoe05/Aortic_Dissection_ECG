@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#596B7A"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        dominant-baseline: alphabetic;
+      }
+    </style>
+  </defs>
+
+<text x="70.0" y="70.0" font-size="36" font-weight="800" fill="#1F2933" text-anchor="start">Model Cohort Sizes and Splits</text>
+<text x="70.0" y="107.0" font-size="18" fill="#596B7A" text-anchor="start">Both models use the same active predictor structure: 16 features, first-only ECG aggregation, XGBoost</text>
+<text x="70.0" y="129.0" font-size="18" fill="#596B7A" text-anchor="start">native categorical handling.</text>
+<text x="185.0" y="190.0" font-size="28" font-weight="800" fill="#1F2933" text-anchor="start">ICD-based ECG-complete cohort</text>
+<text x="955.0" y="190.0" font-size="28" font-weight="800" fill="#1F2933" text-anchor="start">LLM-derived ECG-complete cohort</text>
+<rect x="130.0" y="230.0" width="330.0" height="170.0" rx="8" ry="8" fill="#EEF8EE" stroke="#3A7D44" stroke-width="2"/>
+<text x="295.0" y="278.0" font-size="42" font-weight="800" fill="#1F2933" text-anchor="middle">70,094</text>
+<text x="295.0" y="312.0" font-size="21" fill="#1F2933" text-anchor="middle">model rows</text>
+<text x="295.0" y="370.0" font-size="17" fill="#596B7A" text-anchor="middle">355 targets | 0.51%</text>
+<text x="295.0" y="390.0" font-size="17" fill="#596B7A" text-anchor="middle">prevalence</text>
+<rect x="900.0" y="230.0" width="330.0" height="170.0" rx="8" ry="8" fill="#EEF8EE" stroke="#3A7D44" stroke-width="2"/>
+<text x="1065.0" y="278.0" font-size="42" font-weight="800" fill="#1F2933" text-anchor="middle">7,830</text>
+<text x="1065.0" y="312.0" font-size="21" fill="#1F2933" text-anchor="middle">model rows</text>
+<text x="1065.0" y="370.0" font-size="17" fill="#596B7A" text-anchor="middle">187 targets | 2.39%</text>
+<text x="1065.0" y="390.0" font-size="17" fill="#596B7A" text-anchor="middle">prevalence</text>
+<rect x="130.0" y="505.0" width="230.0" height="120.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="245.0" y="547.0" font-size="29" font-weight="800" fill="#1F2933" text-anchor="middle">56,116</text>
+<text x="245.0" y="573.0" font-size="16" fill="#596B7A" text-anchor="middle">train</text>
+<text x="245.0" y="591.0" font-size="16" fill="#596B7A" text-anchor="middle">285 targets</text>
+<rect x="395.0" y="505.0" width="230.0" height="120.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="510.0" y="547.0" font-size="29" font-weight="800" fill="#1F2933" text-anchor="middle">13,978</text>
+<text x="510.0" y="573.0" font-size="16" fill="#596B7A" text-anchor="middle">holdout</text>
+<text x="510.0" y="591.0" font-size="16" fill="#596B7A" text-anchor="middle">70 targets</text>
+<rect x="900.0" y="505.0" width="230.0" height="120.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="1015.0" y="547.0" font-size="29" font-weight="800" fill="#1F2933" text-anchor="middle">6,264</text>
+<text x="1015.0" y="573.0" font-size="16" fill="#596B7A" text-anchor="middle">train</text>
+<text x="1015.0" y="591.0" font-size="16" fill="#596B7A" text-anchor="middle">150 targets</text>
+<rect x="1165.0" y="505.0" width="230.0" height="120.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="1280.0" y="547.0" font-size="29" font-weight="800" fill="#1F2933" text-anchor="middle">1,566</text>
+<text x="1280.0" y="573.0" font-size="16" fill="#596B7A" text-anchor="middle">holdout</text>
+<text x="1280.0" y="591.0" font-size="16" fill="#596B7A" text-anchor="middle">37 targets</text>
+<path d="M295,400 C295,455 245,465 245,505" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M295,400 C295,455 510,465 510,505" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1065,400 C1065,455 1015,465 1015,505" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<path d="M1065,400 C1065,455 1280,465 1280,505" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<rect x="595.0" y="665.0" width="410.0" height="150.0" rx="8" ry="8" fill="#EEF6F5" stroke="#2C7A7B" stroke-width="2"/>
+<text x="800.0" y="713.0" font-size="40" font-weight="800" fill="#1F2933" text-anchor="middle">16</text>
+<text x="800.0" y="747.0" font-size="19" fill="#1F2933" text-anchor="middle">active predictors</text>
+<text x="800.0" y="785.0" font-size="17" fill="#596B7A" text-anchor="middle">5 demo + 11 first ECG</text>
+<text x="80.0" y="845.0" font-size="18" font-weight="400" fill="#596B7A" text-anchor="start">Sources: demographics_ecg_runs/20260708_151834 and llm_demographics_ecg_runs/llm_cohort_demographics_ecg_xgb_20260714_102716.</text>
+</svg>

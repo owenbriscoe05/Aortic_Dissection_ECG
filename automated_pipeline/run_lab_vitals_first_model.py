@@ -349,6 +349,10 @@ def feature_color_values(series):
     return ((values.clip(lower, upper) - lower) / (upper - lower)).clip(0, 1)
 
 
+def shap_display_feature_label(feature):
+    return str(feature).removesuffix("_first")
+
+
 def train_model_for_shap(cfg, X_train, y_train, summary):
     import xgboost as xgb
 
@@ -410,7 +414,8 @@ def plot_shap_beeswarm_all_features(shap_df, shap_values, X_test, output_path):
     feature_to_index = {feature: idx for idx, feature in enumerate(X_test.columns)}
     rng = np.random.default_rng(42)
     height = max(8.0, 0.28 * len(ordered_features) + 2.0)
-    fig, ax = plt.subplots(figsize=(9.2, height), dpi=170)
+    beeswarm_dpi = 220
+    fig, ax = plt.subplots(figsize=(9.2, height), dpi=beeswarm_dpi)
 
     for y_pos, feature in enumerate(ordered_features):
         feature_idx = feature_to_index[feature]
@@ -444,7 +449,7 @@ def plot_shap_beeswarm_all_features(shap_df, shap_values, X_test, output_path):
 
     ax.axvline(0, color="#2d3436", linewidth=1.0)
     ax.set_yticks(range(len(ordered_features)))
-    ax.set_yticklabels(ordered_features)
+    ax.set_yticklabels([shap_display_feature_label(feature) for feature in ordered_features])
     ax.set_xlabel("SHAP contribution to model margin")
     ax.set_title("Directional SHAP Beeswarm, All Features")
     ax.grid(axis="x", alpha=0.22)
@@ -456,7 +461,7 @@ def plot_shap_beeswarm_all_features(shap_df, shap_values, X_test, output_path):
     cbar.set_ticks([0, 1])
     cbar.set_ticklabels(["Low", "High"])
     fig.tight_layout()
-    fig.savefig(output_path)
+    fig.savefig(output_path, dpi=beeswarm_dpi)
     plt.close(fig)
 
 

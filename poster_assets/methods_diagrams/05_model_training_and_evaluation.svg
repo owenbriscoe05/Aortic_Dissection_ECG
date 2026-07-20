@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img">
+<rect width="100%" height="100%" fill="#FFFFFF"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6"
+            orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#596B7A"/>
+    </marker>
+    <style>
+      text {
+        font-family: Arial, Helvetica, sans-serif;
+        dominant-baseline: alphabetic;
+      }
+    </style>
+  </defs>
+
+<text x="70.0" y="70.0" font-size="36" font-weight="800" fill="#1F2933" text-anchor="start">Model Development and Evaluation</text>
+<text x="70.0" y="107.0" font-size="18" fill="#596B7A" text-anchor="start">Training choices are fit on the training data and validation split; the holdout remains reserved for</text>
+<text x="70.0" y="129.0" font-size="18" fill="#596B7A" text-anchor="start">final evaluation.</text>
+<rect x="70.0" y="200.0" width="295.0" height="180.0" rx="8" ry="8" fill="#EEF6F5" stroke="#2C7A7B" stroke-width="2"/>
+<text x="92.0" y="236.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Raw feature matrix</text>
+<text x="92.0" y="268.0" font-size="18" fill="#596B7A" text-anchor="start">Adult cohort rows with</text>
+<text x="92.0" y="290.0" font-size="18" fill="#596B7A" text-anchor="start">demographics, window bounds,</text>
+<text x="92.0" y="312.0" font-size="18" fill="#596B7A" text-anchor="start">labels, and first ECG</text>
+<text x="92.0" y="334.0" font-size="18" fill="#596B7A" text-anchor="start">features.</text>
+<rect x="405.0" y="200.0" width="295.0" height="180.0" rx="8" ry="8" fill="#F3F6FA" stroke="#3D5A80" stroke-width="2"/>
+<text x="427.0" y="236.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Preprocessing</text>
+<text x="427.0" y="268.0" font-size="18" fill="#596B7A" text-anchor="start">ECG-complete filter,</text>
+<text x="427.0" y="290.0" font-size="18" fill="#596B7A" text-anchor="start">row/column missingness</text>
+<text x="427.0" y="312.0" font-size="18" fill="#596B7A" text-anchor="start">thresholds, leakage drops,</text>
+<text x="427.0" y="334.0" font-size="18" fill="#596B7A" text-anchor="start">native categorical dtypes.</text>
+<rect x="740.0" y="200.0" width="295.0" height="180.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="762.0" y="236.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Train/validation</text>
+<text x="762.0" y="268.0" font-size="18" fill="#596B7A" text-anchor="start">Stratified split within</text>
+<text x="762.0" y="290.0" font-size="18" fill="#596B7A" text-anchor="start">training data; tune XGBoost</text>
+<text x="762.0" y="312.0" font-size="18" fill="#596B7A" text-anchor="start">parameter candidates by</text>
+<text x="762.0" y="334.0" font-size="18" fill="#596B7A" text-anchor="start">validation average</text>
+<text x="762.0" y="356.0" font-size="18" fill="#596B7A" text-anchor="start">precision.</text>
+<rect x="1075.0" y="200.0" width="295.0" height="180.0" rx="8" ry="8" fill="#FFF6E6" stroke="#B36B00" stroke-width="2"/>
+<text x="1097.0" y="236.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Final model</text>
+<text x="1097.0" y="268.0" font-size="18" fill="#596B7A" text-anchor="start">Refit selected XGBoost model</text>
+<text x="1097.0" y="290.0" font-size="18" fill="#596B7A" text-anchor="start">using scale_pos_weight and</text>
+<text x="1097.0" y="312.0" font-size="18" fill="#596B7A" text-anchor="start">selected features.</text>
+<rect x="1075.0" y="505.0" width="295.0" height="185.0" rx="8" ry="8" fill="#EEF8EE" stroke="#3A7D44" stroke-width="2"/>
+<text x="1097.0" y="541.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Holdout evaluation</text>
+<text x="1097.0" y="573.0" font-size="18" fill="#596B7A" text-anchor="start">Average precision, PR-AUC,</text>
+<text x="1097.0" y="595.0" font-size="18" fill="#596B7A" text-anchor="start">ROC-AUC, F1, threshold</text>
+<text x="1097.0" y="617.0" font-size="18" fill="#596B7A" text-anchor="start">operating points, feature</text>
+<text x="1097.0" y="639.0" font-size="18" fill="#596B7A" text-anchor="start">importance, SHAP, run</text>
+<text x="1097.0" y="661.0" font-size="18" fill="#596B7A" text-anchor="start">metadata.</text>
+<rect x="405.0" y="505.0" width="500.0" height="185.0" rx="8" ry="8" fill="#FCEEEE" stroke="#A43E3E" stroke-width="2"/>
+<text x="427.0" y="541.0" font-size="23" font-weight="700" fill="#1F2933" text-anchor="start">Feature selection safeguards</text>
+<text x="427.0" y="573.0" font-size="18" fill="#596B7A" text-anchor="start">Recursive elimination, when enabled, uses</text>
+<text x="427.0" y="595.0" font-size="18" fill="#596B7A" text-anchor="start">validation data rather than holdout. Race is</text>
+<text x="427.0" y="617.0" font-size="18" fill="#596B7A" text-anchor="start">protected from automatic pruning.</text>
+<line x1="365.0" y1="290.0" x2="405.0" y2="290.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="700.0" y1="290.0" x2="740.0" y2="290.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="1035.0" y1="290.0" x2="1075.0" y2="290.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<line x1="1222.0" y1="380.0" x2="1222.0" y2="505.0" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+<path d="M885,380 C930,455 1000,500 1075,560" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrow)"/>
+<text x="190.0" y="480.0" font-size="20" font-weight="400" fill="#596B7A" text-anchor="start">Natural-prevalence holdout is assigned before preprocessing</text>
+<path d="M205,385 C205,450 1050,450 1120,505" fill="none" stroke="#596B7A" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 8" marker-end="url(#arrow)"/>
+</svg>
