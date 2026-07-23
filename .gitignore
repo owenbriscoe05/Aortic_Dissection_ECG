@@ -19,3 +19,10 @@ automated_pipeline/*_cached.csv
 .env
 .venv/
 venv/
+
+# Other
+AGENTS.md
+poster_assets/methods_diagrams/
+poster_assets/results_figures/*.svg
+poster_assets/results_figures/fm_roc_comparison/
+poster_assets/results_figures/tables/
