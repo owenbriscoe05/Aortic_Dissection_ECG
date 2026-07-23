@@ -1,9 +1,0 @@
-label,feature_family,missing_fraction,observed_fraction
-Control,Demographics,0.009420384665707182,0.9905796153342928
-Control,ECG intervals,0.00013083867591259977,0.9998691613240874
-Control,ECG wave timing,0.0,1.0
-Control,ECG axes,0.0,1.0
-Target,Demographics,0.020320855614973262,0.9796791443850268
-Target,ECG intervals,0.0,1.0
-Target,ECG wave timing,0.0,1.0
-Target,ECG axes,0.0,1.0

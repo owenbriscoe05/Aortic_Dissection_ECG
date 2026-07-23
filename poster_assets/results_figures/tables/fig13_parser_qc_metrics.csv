@@ -1,8 +1,0 @@
-metric,value
-qualifying_visits_with_ecg_24h,194917.0
-staged_discharge_note_rows,160095.0
-parsed,160093.0
-errors,2.0
-elapsed_hours,2.2022222222222223
-parsed_per_hour,72696.11503531785
-parallel_workers,100.0

@@ -1,8 +1,0 @@
-category,count,error
-Cardiac/arrhythmia,35,False positive
-Pneumonia/respiratory,6,False positive
-GI/abdominal,3,False positive
-Other/unclear,2,False positive
-Neurologic,1,False positive
-Stanford A,28,False negative
-Stanford unclear,7,False negative
