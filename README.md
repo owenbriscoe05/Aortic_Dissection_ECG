@@ -4,10 +4,10 @@ This project looks at aortic dissection (AD) patients from the MIMIC-IV EHR. Alt
 
 ## Overview
 
-Objective: To develop a model capable of outperforming clinical misdiagnosis rates (which is roughly 1 in 3 people). 
-Data source: MIMIC-IV
-Main workflow: Housed under automated_pipeline/
-Current structure: 
+Objective: To develop a model capable of outperforming clinical misdiagnosis rates (which is roughly 1 in 3 people).   
+Data source: MIMIC-IV  
+Main workflow: Housed under automated_pipeline/  
+Current structure:   
 Control and case cohorts have been defined using LLM parsing of encounter discharge notes. Subjects are restricted to adults, Stanford Type A dissections, and only those with at least one ECG measurement within the first 24 hours of their initial encounter with the hospital system.
 
 The current workflow will take a changeable configuration (including the ability to change feature set and cohort definition) and fully run the model. Output is ROC and PR AUC plots, SHAP Beeswarm feature importance set, and an html presentation with other metrics. 
@@ -16,10 +16,10 @@ The current workflow will take a changeable configuration (including the ability
 --
 .env contains the API keys (Bedrock and Azure)
 --
-data/mimic-iv/ houses all raw MIMIC-IV data. Included are hosp, icu, ecg, and note modules.
-data/intermediate houses important tables for ICD-coded aortic dissection patients only. This directory is not relevant for the current workflow, which uses LLM-parsed discharge notes to define dissection patients, instead of ICD codes.
-data/processed/pipeline_cache holds a cache that will always be attempted to be used for efficiency purposes. Often, the cache needs to be rebuilt for new feature sets and model parameters.
-data/processed/model_reports holds a massive amount of previous model runs with different feature sets and model specifications. most model run subdirectories include an html presentation with useful figures and metrics.
+data/mimic-iv/ houses all raw MIMIC-IV data. Included are hosp, icu, ecg, and note modules.  
+data/intermediate houses important tables for ICD-coded aortic dissection patients only. This directory is not relevant for the current workflow, which uses LLM-parsed discharge notes to define dissection patients, instead of ICD codes.  
+data/processed/pipeline_cache holds a cache that will always be attempted to be used for efficiency purposes. Often, the cache needs to be rebuilt for new feature sets and model parameters.  
+data/processed/model_reports holds a massive amount of previous model runs with different feature sets and model specifications. most model run subdirectories include an html presentation with useful figures and metrics.  
 notebooks/ holds useful exploratory analyses of the dataset. You can probably find useful statistics about the target and control populations here.
 
 automated_pipeline/ contains the active pipeline
@@ -32,12 +32,12 @@ automated_pipeline/ contains the active pipeline
 ## Setup
 
 Use the project conda environment:
-'''bash
+'''bash  
 conda activate ECG
 
 Most model commands should be run from automated_pipeline/ because several scripts use relative paths:
 
-cd automated_pipeline
+cd automated_pipeline  
 python run_llm_cohort_xgboost_model.py
 
 Core dependencies include pandas, numpy, scikit-learn, xgboost, matplotlib, jsonschema, python-dotenv, and openai.
@@ -50,7 +50,7 @@ Do not commit anything in data/, .env, or poster_assets/
 
 To run the LLM-derived cohort model:
 
-cd automated_pipeline
+cd automated_pipeline  
 python run_llm_cohort_xgboost_model.py
 
 Use --targets-path and --controls-path when evaluating specific parsed-cohort files. The default expectation is demographics + ECG, but passing --top-labs N enables a lab-inclusive variant with the top N most prevalent labs in the full cohort.
@@ -59,10 +59,10 @@ If more parsing using LLMs is necessary, note that the parse_discharge.py script
 
 Examples:
 
-python automated_pipeline/parse_discharge.py --run --max-visits 10 --parallel-workers 2 --max-in-flight 4 
+python automated_pipeline/parse_discharge.py --run --max-visits 10 --parallel-workers 2 --max-in-flight 4   
 will allow the LLM to actually run with a maximum of 10 discharge notes to parse. The LLM will run in parallel with 2 workers.
 
-python automated_pipeline/parse_discharge.py --run --hadm-ids 12345678 23456789 
+python automated_pipeline/parse_discharge.py --run --hadm-ids 12345678 23456789  
 will allow the LLM to actually run on these 2 specific encounters. No parallel work will be done.
 
 If --run is not included, the LLM will not be called and the API token will not be used.
